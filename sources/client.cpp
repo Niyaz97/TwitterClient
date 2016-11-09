@@ -86,7 +86,7 @@ namespace Twitter{
 
             std::string URL_REQUEST;
 
-            URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297&skip_status=true&include_user_entities=false";
+            URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297";
 
             curl_easy_setopt(Handle, CURLOPT_URL, URL_REQUEST.c_str());
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
