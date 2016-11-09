@@ -2,7 +2,7 @@
 #include <iostream>
 #include <curl/curl.h>
 #include <sstream>
-#include <../include/json.hpp>
+#include <../include/twitter/json.hpp>
 
 namespace Twitter{
     using json=nlohmann::json ;
