@@ -2,15 +2,19 @@
 #define TWITTERCLIENT_CLIENT_HPP
 
 #include <string>
-#include <map>
 
 namespace Twitter {
 	class Client {
 	public:
-		using dict_t = std::map<std::string, std::string>;
-   		Client(dict_t settings);
-   		auto check_connection() -> bool;
-	};
+
+	auto check_connection() -> bool;
+        auto get_followers() -> void;
+
+        auto check_connection_signature() -> bool;
+
+        static auto write_to_string(void* data, size_t size, size_t nmemb, void* stream) -> size_t;
+    };
+
 }
 
 
