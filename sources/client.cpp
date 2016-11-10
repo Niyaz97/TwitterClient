@@ -1,23 +1,54 @@
 #include <twitter/client.hpp>
 #include <iostream>
-#include <curl/curl.h>
 #include <sstream>
-#include <../include/twitter/json.hpp>
+#include <../include/json.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace Twitter{
+
+    Twitter::Client::Client() : bearer_token(""){
+        Handle = curl_easy_init();
+    }
+    Twitter::Client::~Client(){
+        curl_easy_cleanup(Handle);
+    }
+
     using json=nlohmann::json ;
 
-    auto Twitter::Client::write_to_string(void *ptr, size_t size, size_t count, void *stream) -> size_t
-    {
+    auto Twitter::Client::write_to_string(void *ptr, size_t size, size_t count, void *stream) -> size_t {
         ((std::string*)stream)->append((char*)ptr, 0, size*count);
         return size*count;
     }
 
-    auto Twitter::Client::check_connection()-> bool {
+    const std::string base64_padding[] = {"", "==","="};
+    auto Twitter::Client::encode64(const std::string s)->std::string{
+        namespace bai = boost::archive::iterators;
 
+        std::stringstream os;
+
+        // convert binary values to base64 characters
+        typedef bai::base64_from_binary
+        // retrieve 6 bit integers from a sequence of 8 bit bytes
+                <bai::transform_width<const char *, 6, 8> > base64_enc; // compose all the above operations in to a new iterator
+
+        std::copy(base64_enc(s.c_str()), base64_enc(s.c_str() + s.size()),
+                  std::ostream_iterator<char>(os));
+
+        os << base64_padding[s.size() % 3];
+        return os.str();
+    }
+
+
+
+    auto Twitter::Client::check_connection(const std::string consumer_key, const std::string consumer_secret)-> bool {
+
+        std::string encoded_token=encode64(consumer_key+":"+consumer_secret);
         std::string separator="&";
-
-        CURL *Handle = curl_easy_init();
         CURLcode res;
 
         if(Handle){
@@ -26,8 +57,8 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_POST, 1);
 
             curl_slist* slist=nullptr;
-
-            slist=curl_slist_append(slist, "Authorization: Basic Wm5teEJzN1liSTdvRDJibjVETWlyQlVSRDpsbWVMRDl4bmNiUGY2M1NMeUtQSUk5OVB5cGxPdkh1OXRhbkZhVDh2T055ek1haG5PYw==");
+            std::string auth="Authorization: Basic "+encoded_token;
+            slist=curl_slist_append(slist, auth.c_str());
             slist=curl_slist_append(slist, separator.c_str());
             slist=curl_slist_append(slist, "Content-Type: application/x-www-form-urlencoded");
             slist=curl_slist_append(slist, "charsets: utf-8");
@@ -37,57 +68,48 @@ namespace Twitter{
             // POST- запрос c авторизацией
             curl_easy_setopt(Handle, CURLOPT_POSTFIELDS, data.c_str() );
             curl_easy_setopt(Handle, CURLOPT_POSTFIELDSIZE, data.length() );
-
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
 
-            std::string content; std::string header;
-
+            std::string content, header;
             //  сохраняем html код cтраницы в строку content
             curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
-
-            // Загловок ответа сервера выводим в консоль
             curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
-            curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
-
+            curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, header);
             curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
 //            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
 
-            res = curl_easy_perform(Handle);
-            curl_slist_free_all(slist);
+            if(curl_easy_perform(Handle)==CURLE_OK) {
+                curl_slist_free_all(slist);
+                std::cout << content << std::endl;
+                json jsn_obj=json::parse(content);
+                json jsn_token=jsn_obj.begin().value();
+                std::cout << "bearer token" << ": " << jsn_token << std::endl;
+            }
+            curl_easy_reset(Handle);
 
-            std::cout<< curl_easy_strerror(res) << std::endl;
-            std::cout << "content: " << std::endl << content << std::endl;
-            std::cout << "header: " << std::endl << header << std::endl;
-
-            curl_easy_cleanup(Handle);
         }
-        return true;
+        return false;
     }
 
     auto Twitter::Client::get_followers()-> void {
-        CURL *Handle=curl_easy_init();
 
         if(Handle){
-            std::string content; std::string header;
-
+            std::string content, header;
             //  сохраняем html код cтраницы в строку content
             curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
-
-            // Загловок ответа сервера выводим в консоль
             curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
 
             curl_slist* slist=nullptr;
-            slist=curl_slist_append(slist, "Authorization: Bearer AAAAAAAAAAAAAAAAAAAAAPCkxgAAAAAANQPSyH7K0q6Hocmj1%2FscKemMKiM%3DzhdMAhdr30t9MP9CkaSPD7Jz6WbJ3gdWgxpX7n6I0ZwFQVDPdS");
+            std::string str = "Authorization: Bearer AAAAAAAAAAAAAAAAAAAAAPCkxgAAAAAANQPSyH7K0q6Hocmj1%2FscKemMKiM%3DzhdMAhdr30t9MP9CkaSPD7Jz6WbJ3gdWgxpX7n6I0ZwFQVDPdS";
+            slist=curl_slist_append(slist, str.c_str());
             curl_easy_setopt(Handle, CURLOPT_HTTPHEADER, slist);
 
             std::string URL_REQUEST;
-
             URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297";
-
             curl_easy_setopt(Handle, CURLOPT_URL, URL_REQUEST.c_str());
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
             curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
@@ -128,18 +150,16 @@ namespace Twitter{
                     std::cout << std::endl;
                 }
             }
-
             std::cout<<content<< std::endl;
             curl_slist_free_all(slist);
-
+            curl_easy_reset(Handle);
         }
+
     }
 
     auto Twitter::Client::check_connection_signature() -> bool {
-        CURL *Handle=curl_easy_init();
 
         std::string separator="&";
-
         if(Handle){
             curl_slist* authlist=nullptr;
             std::string ouath_consumer_key="ZnmxBs7YbI7oD2bn5DMirBURD&";
