@@ -1,4 +1,6 @@
 language: generic
+sudo: false
+
 addons:    
     install:
   # Get boost
@@ -15,7 +17,6 @@ addons:
 matrix:
   include:
     - os: linux
-      sudo: required
       env: COMPILER_NAME=gcc CXX=g++-5 CC=gcc-5
       addons:
         apt:
