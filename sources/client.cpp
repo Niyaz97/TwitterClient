@@ -1,7 +1,7 @@
 #include <twitter/client.hpp>
 #include <iostream>
 #include <sstream>
-#include <../include/json.hpp>
+#include <../include/twitter/json.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <boost/archive/iterators/binary_from_base64.hpp>
