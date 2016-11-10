@@ -15,8 +15,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
 add_library(${PROJECT_NAME} STATIC ${CMAKE_CURRENT_SOURCE_DIR}/sources/client.cpp)
 
-add_executable(Examples ${CMAKE_CURRENT_SOURCE_DIR} examples/main.cpp)
-add_executable(Tests ${TESTS_SOURCE} tests/catch.hpp tests/check.cpp tests/main.cpp)
 
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
@@ -29,6 +27,7 @@ elseif(MSVC)
 endif()
 
 add_executable(Examples ${CMAKE_CURRENT_SOURCE_DIR}/examples/main.cpp)
+add_executable(Tests ${TESTS_SOURCE} tests/catch.hpp tests/check.cpp tests/main.cpp)
 
 target_link_libraries(Examples ${PROJECT_NAME} ${DEPENDS_LIBRARIES})
 
