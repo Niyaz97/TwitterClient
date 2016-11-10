@@ -99,7 +99,7 @@ namespace Twitter{
                 int count = 0;
                 for(json::iterator it = jsn_users.begin(); it!=jsn_users.end(); ++it) {
 
-                    std::cout << ++count << ")";
+                    std::cout << ++count << std::endl;
 
                     json jsn_id = it.value()["id"];
                     if (!jsn_id.is_null())
@@ -129,14 +129,10 @@ namespace Twitter{
                 }
             }
 
-
-            std::cout<<"header:"<<header<<std::endl;
             std::cout<<content<< std::endl;
             curl_slist_free_all(slist);
 
         }
-
-
     }
 
     auto Twitter::Client::check_connection_signature() -> bool {
@@ -162,8 +158,6 @@ namespace Twitter{
             authlist=curl_slist_append(authlist, oauth_token.c_str());
             authlist=curl_slist_append(authlist, oauth_version.c_str());
             authlist=curl_slist_append(authlist, "Content-Type: application/x-www-form-urlencoded");
-
-
         }
     }
 }
