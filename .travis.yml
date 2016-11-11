@@ -1,19 +1,4 @@
 language: generic
-sudo: false
-
-addons:    
-    install:
-  # Get boost
-  - wget https://github.com/Viq111/travis-container-packets/releases/download/boost-1.57.0/boost.tar.bz2
-  - tar -xjf boost.tar.bz2
-  - rm boost.tar.bz2
-  - export BOOST_ROOT=$(pwd)/boost
-  - wget https://github.com/IGNF/gilviewer/archive/master.zip
-  - unzip master
-  - rm master.zip
-  - mkdir gilviewer
-  - cd gilviewer-master
-  - mkdir build && cd build && cmake .. && make && make DESTDIR=../../gilviewer install && cd ../..
 matrix:
   include:
     - os: linux
@@ -31,6 +16,7 @@ matrix:
         apt:
           packages:
             - g++-4.9
+            - libboost1.55-all-dev
             - cmake
           sources: &sources
             - llvm-toolchain-precise
