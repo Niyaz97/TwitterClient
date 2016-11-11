@@ -28,7 +28,6 @@ elseif(MSVC)
 endif()
 
 add_executable(Examples ${CMAKE_CURRENT_SOURCE_DIR}/examples/main.cpp)
-add_executable(Tests ${TESTS_SOURCE} tests/catch.hpp tests/check.cpp tests/main.cpp)
 
 target_link_libraries(Examples ${PROJECT_NAME} ${DEPENDS_LIBRARIES})
 
