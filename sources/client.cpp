@@ -49,6 +49,7 @@ namespace Twitter{
         std::string encoded_token=encode64(consumer_key+":"+consumer_secret);
         std::string separator="&";
         CURLcode res;
+        Handle = curl_easy_init();
 
         if(Handle){
 
@@ -93,6 +94,7 @@ namespace Twitter{
     }
 
     auto Twitter::Client::get_followers()-> void {
+        Handle = curl_easy_init();
 
         if(Handle){
             std::string content, header;
