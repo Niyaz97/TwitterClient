@@ -74,7 +74,7 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
             curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
-            curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, header);
+            curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
             curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
 //            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
