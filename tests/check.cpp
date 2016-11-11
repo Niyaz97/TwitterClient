@@ -26,7 +26,7 @@ SCENARIO("tokens are valid")
         {
             THEN("success")
             {
-                REQUIRE(!client.check_connection(cons_key, cons_secret));
+                REQUIRE(client.check_connection(cons_key, cons_secret));
             }
         }
     }
