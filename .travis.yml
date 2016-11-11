@@ -7,6 +7,7 @@ matrix:
         apt:
           packages:
             - g++-5
+            - libboost1.55-all-dev
             - cmake
           sources: &sources
             - llvm-toolchain-precise
@@ -22,6 +23,7 @@ matrix:
           sources: &sources
             - llvm-toolchain-precise
             - ubuntu-toolchain-r-test
+            - boost-latest
 script:
   - mkdir build
   - cd build
