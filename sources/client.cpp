@@ -85,6 +85,7 @@ namespace Twitter{
                 json jsn_obj=json::parse(content);
                 json jsn_token=jsn_obj.begin().value();
                 std::cout << "bearer token" << ": " << jsn_token << std::endl;
+                return true;
             }
             curl_easy_reset(Handle);
 
