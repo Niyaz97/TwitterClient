@@ -10,7 +10,7 @@ SCENARIO("tokens are valid")
         {
             THEN("success")
             {
-                REQUIRE_TRUE(client.check_connection(cons_key, cons_secret));
+                REQUIRE(client.check_connection(cons_key, cons_secret)==true);
             }
         }
     }
@@ -24,7 +24,7 @@ SCENARIO("tokens are not valid")
         {
             THEN("failure")
             {
-                REQUIRE_FALSE(client.check_connection("Wm5teEJzN1liSTdvRDJibjVETWlyQligjlfeeqfVSRA", "Wm5hfowefjteEJzN1liSTdvRDJibjVETWlyQlVSRA"));
+                REQUIRE(client.check_connection("Wm5teEJzN1liSTdvRDJibjVETWlyQligjlfeeqfVSRA", "Wm5hfowefjteEJzN1liSTdvRDJibjVETWlyQlVSRA")==false);
             }
         }
     }
