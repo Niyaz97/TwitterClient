@@ -11,7 +11,7 @@ SCENARIO("tokens are not valid")
         {
             THEN("failure")
             {
-                REQUIRE(!client.check_connection("Wm5teEJzN1liSTdvRDJibjVETWlyQligjlfeeqfVSRA", "Wm5hfowefjteEJzN1liSTdvRDJibjVETWlyQlVSRA"));
+                REQUIRE(client.check_connection("Wm5teEJzN1liSTdvRDJibjVETWlyQligjlfeeqfVSRA", "Wm5hfowefjteEJzN1liSTdvRDJibjVETWlyQlVSRA"));
             }
         }
     }
