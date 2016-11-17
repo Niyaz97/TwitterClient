@@ -5,6 +5,7 @@ SCENARIO("get followers correctly")
 {
     GIVEN("authorized client and json object with his followers")
     {
+        Twitter::Client client;
         Twitter::Client:: json followers= R"([{"id":2202089073,"name":"timagol1k","screen_name":"74Toddler","followers_count":66}])"_json;
         WHEN("get followers")
         {
