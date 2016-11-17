@@ -24,6 +24,7 @@ SCENARIO("get followers correctly")
             {
                 REQUIRE(are_same);
             }
+                }
         }
     }
 }
