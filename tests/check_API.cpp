@@ -9,9 +9,10 @@ SCENARIO("get followers correctly")
   //      Twitter::Client:: json followers= R"([{"followers_count":66,"id":2202089073,"name":"timagol1k","screen_name":"74Toddler"}])"_json;
         WHEN("get followers")
         {
+            Twitter::Client::json jsn_users;
             Twitter::Client::json followers_from_get = client.get_followers();
            bool are_same;
-                for(Twitter::Client::json::iterator it =Twitter::Client::json jsn_users.begin(); it!=jsn_users.end(); ++it) {
+                for(Twitter::Client::json::iterator it = jsn_users.begin(); it!=jsn_users.end(); ++it) {
 
                    Twitter::Client::json jsn_follow_c=it.value()["followers_count"];
                    Twitter::Client::json jsn_id = it.value()["id"];
