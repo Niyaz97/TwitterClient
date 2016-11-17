@@ -4,7 +4,7 @@
 #include <string>
 #include <map>
 #include <curl/curl.h>
-#include <json.hpp>
+#include "json.hpp"
 
 namespace Twitter {
 	class Client {
