@@ -1,3 +1,6 @@
+#include <twitter/client.hpp>
+#include "catch.hpp"
+
 SCENARIO("get followers correctly")
 {
     GIVEN("authorized client and json object with his followers")
