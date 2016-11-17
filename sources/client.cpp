@@ -123,7 +123,9 @@ namespace Twitter{
                 int count = 0;
                 for(json::iterator it = jsn_users.begin(); it!=jsn_users.end(); ++it) {
 
-                    std::cout << ++count << std::endl;
+                    json jsn_follow_c=it.value()["followers_count"];
+                    if(!jsn_follow_c.is_null())
+                        std::cout<<"followers count: " << jsn_follow_c.begin().value() << std::endl;
 
                     json jsn_id = it.value()["id"];
                     if (!jsn_id.is_null())
@@ -136,11 +138,7 @@ namespace Twitter{
                     json jsn_screen_name = it.value()["screen_name"];
                     if (!jsn_screen_name.is_null())
                         std::cout << "screen_name: " << jsn_screen_name.begin().value() << std::endl;
-
-                    json jsn_follow_c=it.value()["followers_count"];
-                    if(!jsn_follow_c.is_null())
-                        std::cout<<"followers count: " << jsn_follow_c.begin().value() << std::endl;
-
+                    
                     std::cout << std::endl;
                 }
                 curl_slist_free_all(slist);
