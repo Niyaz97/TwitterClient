@@ -1,12 +1,15 @@
 #include <twitter/client.hpp>
 #include <iostream>
 #include <sstream>
-#include <../include/twitter/json.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/algorithm/string.hpp>
+
+
+//add_executable(Tests ${TESTS_SOURCE} tests/catch.hpp tests/check.cpp tests/main.cpp)
 
 namespace Twitter{
 
@@ -49,7 +52,6 @@ namespace Twitter{
         std::string encoded_token=encode64(consumer_key+":"+consumer_secret);
         std::string separator="&";
         CURLcode res;
-
         if(Handle){
 
             curl_easy_setopt(Handle, CURLOPT_URL, "https://api.twitter.com/oauth2/token");
@@ -93,9 +95,9 @@ namespace Twitter{
         return false;
     }
 
-    auto Twitter::Client::get_followers()-> void {
+    auto Twitter::Client::get_followers()-> Client::json {
 
-        if(Handle){
+            if(Handle){
             std::string content, header;
             //  сохраняем html код cтраницы в строку content
             curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
@@ -109,15 +111,15 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_HTTPHEADER, slist);
 
             std::string URL_REQUEST;
-            URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297";
+            URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297&count=1";
             curl_easy_setopt(Handle, CURLOPT_URL, URL_REQUEST.c_str());
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
             curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
             if(curl_easy_perform(Handle)==CURLE_OK){
-
                 json jsn_obj=json::parse(content);
                 json jsn_users=jsn_obj["users"];
+
                 int count = 0;
                 for(json::iterator it = jsn_users.begin(); it!=jsn_users.end(); ++it) {
 
@@ -127,10 +129,6 @@ namespace Twitter{
                     if (!jsn_id.is_null())
                         std::cout << "id: " << jsn_id.begin().value() << std::endl;
 
-                    json jsn_id_str = it.value()["id_str"];
-                    if (!jsn_id_str.is_null())
-                        std::cout << "id_string: " << jsn_id_str.begin().value() << std::endl;
-
                     json jsn_name = it.value()["name"];
                     if (!jsn_name.is_null())
                         std::cout << "name: " << jsn_name.begin().value()<<std::endl;
@@ -139,45 +137,77 @@ namespace Twitter{
                     if (!jsn_screen_name.is_null())
                         std::cout << "screen_name: " << jsn_screen_name.begin().value() << std::endl;
 
-                    json jsn_location = it.value()["location"];
-                    if (!jsn_location.is_null())
-                        std::cout << "location:  " << jsn_location.begin().value() << std::endl;
-
                     json jsn_follow_c=it.value()["followers_count"];
                     if(!jsn_follow_c.is_null())
                         std::cout<<"followers count: " << jsn_follow_c.begin().value() << std::endl;
 
                     std::cout << std::endl;
                 }
+                curl_slist_free_all(slist);
+                curl_easy_reset(Handle);
+                return jsn_users;
             }
-            std::cout<<content<< std::endl;
             curl_slist_free_all(slist);
             curl_easy_reset(Handle);
         }
-
+    return nullptr;
     }
 
     auto Twitter::Client::check_connection_signature() -> bool {
 
+        time_t t;
+        time(&t);
+
+        std::string ts = boost::lexical_cast<std::string>(t);
+
+
         std::string separator="&";
         if(Handle){
+            curl_easy_setopt(Handle, CURLOPT_URL, "https://api.twitter.com/1.1/statuses/update.json");
+            curl_easy_setopt(Handle, CURLOPT_POST, 1);
             curl_slist* authlist=nullptr;
             std::string ouath_consumer_key="ZnmxBs7YbI7oD2bn5DMirBURD&";
-            std::string oauth_nonce="&";
+            std::string oauth_nonce=encode64(ts)+"&";
             std::string oauth_signature="&";
             std::string oauth_signature_method="HMAC-SHA1&";
-            //std::string oauth_timestamp="";
+            std::string oauth_timestamp=ts;
             std::string oauth_token="AAAAAAAAAAAAAAAAAAAAAPCkxgAAAAAANQPSyH7K0q6Hocmj1%2FscKemMKiM%3DzhdMAhdr30t9MP9CkaSPD7Jz6WbJ3gdWgxpX7n6I0ZwFQVDPdS&";
             std::string oauth_version="1.0";
 
             authlist=curl_slist_append(authlist, ouath_consumer_key.c_str());
             authlist=curl_slist_append(authlist, oauth_nonce.c_str());
-//            authlist=curl_slist_append(authlist, oauth_signature.c_str());
+           // authlist=curl_slist_append(authlist, oauth_signature.c_str());
             authlist=curl_slist_append(authlist, oauth_signature_method.c_str());
-            //authlist=curl_slist_append(authlist, timestamp);
+            authlist=curl_slist_append(authlist, oauth_timestamp.c_str());
             authlist=curl_slist_append(authlist, oauth_token.c_str());
             authlist=curl_slist_append(authlist, oauth_version.c_str());
             authlist=curl_slist_append(authlist, "Content-Type: application/x-www-form-urlencoded");
+
+            std::string data="grant_type=client_credentials";
+            // POST- запрос c авторизацией
+//            curl_easy_setopt(Handle, CURLOPT_POSTFIELDS, data.c_str() );
+//            curl_easy_setopt(Handle, CURLOPT_POSTFIELDSIZE, data.length() );
+//            curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
+
+            std::string content, header;
+            //  сохраняем html код cтраницы в строку content
+            curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
+            curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
+            curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
+            curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
+            curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
+
+//            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
+
+            if(curl_easy_perform(Handle)==CURLE_OK) {
+                curl_slist_free_all(authlist);
+                std::cout<<content<<std::endl;
+                std::cout<<header<<std::endl;
+                return true;
+            }
+            curl_easy_reset(Handle);
         }
+        return false;
     }
 }
+
