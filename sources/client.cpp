@@ -93,7 +93,7 @@ namespace Twitter{
               }
 
                 catch(const std::exception &except){
-                    std::cout<<except.what()<<std::endl;
+                    std::cerr<<except.what()<<std::endl;
                 }
             }
             curl_easy_reset(Handle);
@@ -167,7 +167,7 @@ namespace Twitter{
                     return jsn_users;
                 }
                 catch(const std::exception &except){
-                    std::cout<<except.what()<<std::endl;
+                    std::cerr<<except.what()<<std::endl;
                 }
             }
             curl_slist_free_all(slist);
