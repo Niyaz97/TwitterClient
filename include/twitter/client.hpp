@@ -18,6 +18,7 @@ namespace Twitter {
 
         auto encode64(const std::string )->std::string;
    		auto check_connection(const std::string , const std::string ) -> bool;
+        auto print_followers(json &followers) -> void ;
         auto get_followers() -> json;
 
         auto check_connection_signature() -> bool;
@@ -33,7 +34,6 @@ namespace Twitter {
 
 const std::string cons_key="ZnmxBs7YbI7oD2bn5DMirBURD";
 const std::string cons_secret="lmeLD9xncbPf63SLyKPII99PyplOvHu9tanFaT8vONyzMahnOc";
-
 
 
 
