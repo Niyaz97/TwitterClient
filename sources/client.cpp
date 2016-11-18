@@ -1,6 +1,5 @@
 #include <twitter/client.hpp>
 #include <sstream>
-#include <string>
 #include <boost/lexical_cast.hpp>
 
 #include <boost/archive/iterators/binary_from_base64.hpp>
