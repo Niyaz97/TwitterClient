@@ -1,6 +1,6 @@
 #include <twitter/client.hpp>
-#include <iostream>
 #include <sstream>
+#include <string>
 #include <boost/lexical_cast.hpp>
 
 #include <boost/archive/iterators/binary_from_base64.hpp>
@@ -8,8 +8,6 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/algorithm/string.hpp>
 
-
-//add_executable(Tests ${TESTS_SOURCE} tests/catch.hpp tests/check.cpp tests/main.cpp)
 
 namespace Twitter{
 
@@ -82,17 +80,60 @@ namespace Twitter{
 //            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
 
             if(curl_easy_perform(Handle)==CURLE_OK) {
-                curl_slist_free_all(slist);
-                std::cout << content << std::endl;
-                json jsn_obj=json::parse(content);
-                json jsn_token=jsn_obj.begin().value();
-                std::cout << "bearer token" << ": " << jsn_token << std::endl;
-                return true;
+              try {
+                  curl_slist_free_all(slist);
+                  curl_easy_reset(Handle);
+
+                  json jsn_obj = json::parse(content);
+                  json jsn_token = jsn_obj.begin().value();
+                  bearer_token = jsn_token.dump();
+                  bearer_token.erase(bearer_token.begin());
+                  bearer_token.erase(bearer_token.end()-1);
+                  std::cout << "bearer_token= " << bearer_token << std::endl;
+                  return true;
+              }
+
+                catch(const std::exception &except){
+                    std::cout<<except.what()<<std::endl;
+                }
             }
             curl_easy_reset(Handle);
 
         }
         return false;
+    }
+
+    auto Twitter::Client::print_followers(json &followers) -> void{
+        if( !followers.is_null()){
+            for(json::iterator it = followers.begin(); it!=followers.end(); ++it) {
+
+                json jsn_follow_c=it.value()["followers_count"];
+                if(!jsn_follow_c.is_null())
+                    std::cout<<"followers count: " << jsn_follow_c.begin().value() << std::endl;
+
+                json jsn_id = it.value()["id"];
+                if (!jsn_id.is_null())
+                    std::cout << "id: " << jsn_id.begin().value() << std::endl;
+
+//                    json jsn_id_str = it.value()["id_str"];
+//                    if (!jsn_id_str.is_null())
+//                        std::cout << "id_string: " << jsn_id_str.begin().value() << std::endl;
+
+                json jsn_name = it.value()["name"];
+                if (!jsn_name.is_null())
+                    std::cout << "name: " << jsn_name.begin().value()<<std::endl;
+
+                json jsn_screen_name = it.value()["screen_name"];
+                if (!jsn_screen_name.is_null())
+                    std::cout << "screen_name: " << jsn_screen_name.begin().value() << std::endl;
+
+//                    json jsn_location = it.value()["location"];
+//                    if (!jsn_location.is_null())
+//                        std::cout << "location:  " << jsn_location.begin().value() << std::endl;
+
+                std::cout << std::endl;
+            }
+        }
     }
 
     auto Twitter::Client::get_followers()-> Client::json {
@@ -117,33 +158,18 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
             if(curl_easy_perform(Handle)==CURLE_OK){
-                json jsn_obj=json::parse(content);
-                json jsn_users=jsn_obj["users"];
+                try {
+                    json jsn_obj = json::parse(content);
+                    json jsn_users = jsn_obj["users"];
 
-                int count = 0;
-                for(json::iterator it = jsn_users.begin(); it!=jsn_users.end(); ++it) {
-
-                    json jsn_follow_c=it.value()["followers_count"];
-                    if(!jsn_follow_c.is_null())
-                        std::cout<<"followers count: " << jsn_follow_c.begin().value() << std::endl;
-
-                    json jsn_id = it.value()["id"];
-                    if (!jsn_id.is_null())
-                        std::cout << "id: " << jsn_id.begin().value() << std::endl;
-
-                    json jsn_name = it.value()["name"];
-                    if (!jsn_name.is_null())
-                        std::cout << "name: " << jsn_name.begin().value()<<std::endl;
-
-                    json jsn_screen_name = it.value()["screen_name"];
-                    if (!jsn_screen_name.is_null())
-                        std::cout << "screen_name: " << jsn_screen_name.begin().value() << std::endl;
-                    
-                    std::cout << std::endl;
+                    print_followers(jsn_users);
+                    curl_slist_free_all(slist);
+                    curl_easy_reset(Handle);
+                    return jsn_users;
                 }
-                curl_slist_free_all(slist);
-                curl_easy_reset(Handle);
-                return jsn_users;
+                catch(const std::exception &except){
+                    std::cout<<except.what()<<std::endl;
+                }
             }
             curl_slist_free_all(slist);
             curl_easy_reset(Handle);
@@ -158,8 +184,6 @@ namespace Twitter{
 
         std::string ts = boost::lexical_cast<std::string>(t);
 
-
-        std::string separator="&";
         if(Handle){
             curl_easy_setopt(Handle, CURLOPT_URL, "https://api.twitter.com/1.1/statuses/update.json");
             curl_easy_setopt(Handle, CURLOPT_POST, 1);
