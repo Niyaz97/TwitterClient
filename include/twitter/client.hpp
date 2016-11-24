@@ -5,21 +5,39 @@
 #include <map>
 #include <curl/curl.h>
 #include "json.hpp"
+#include <mutex>
 
 namespace Twitter {
-	class Client {
-	public:
+
+    struct Follower{
+        size_t id=0;
+        size_t follower_count=0;
+        std::string name="";
+        std::string screen_name="";
+        auto out() ->void{
+            std::cout<< "followers count: " << follower_count << std::endl;
+            std::cout << "id: " << id << std::endl;
+            std::cout << "name: " << name <<std::endl;
+            std::cout << "screen_name: " << screen_name << std::endl;
+        }
+    };
+
+    class Client {
+    public:
         using json=nlohmann::json;
+
         Client();
+        Client(std::vector<Twitter::Follower>);
         ~Client();
 
-        auto get_key(const std::string ) -> std::string;
-        auto get_secret(const std::string ) -> std::string;
-
         auto encode64(const std::string )->std::string;
-   		auto check_connection(const std::string , const std::string ) -> bool;
-        auto print_followers(json &followers) -> void ;
-        auto get_followers() -> json;
+        auto check_connection(const std::string , const std::string ) -> bool;
+
+
+        auto print_followers_thread(size_t ) -> bool;
+        auto print_followers(size_t ) -> void ;
+
+        auto get_followers() -> std::vector<Follower>;
 
         auto check_connection_signature() -> bool;
 
@@ -28,6 +46,8 @@ namespace Twitter {
     private:
         std::string bearer_token;
         CURL* Handle;
+        std::vector<Follower> result;
+        bool flag;
     };
 
 }
