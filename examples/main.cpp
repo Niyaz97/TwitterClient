@@ -7,4 +7,12 @@ int main() {
 
     Twitter::Client followers;
     followers.get_followers();
+
+    size_t number;
+    std::cout <<  "Number of threads" << std::endl;
+    std::cin >> number;
+
+    Twitter::Client thread;
+    thread.print_followers_thread(number);
+    return 0;
 }
