@@ -17,6 +17,8 @@ int main() {
         std::string s;
         std::cout << "Enter a command" << std::endl;
         std::cin >> s;
+        if(!std::cin) throw std::invalid_argument("Wrong command");
+
         if (s == "get_followers_v") {
             _v = true;
             if (print_follows.print_followers_thread(number, follows, _v))
@@ -27,10 +29,7 @@ int main() {
             _v = false;
             if (print_follows.print_followers_thread(number, follows, _v))
                 std::cout << "Printed successfully" << std::endl;
-        }
-
-        if(!std::cin) throw std::invalid_argument("Wrong command");
-        
+        }        
     } catch(const std::invalid_argument& e) {
         std::cerr<<e.what()<<std::endl;
     }
