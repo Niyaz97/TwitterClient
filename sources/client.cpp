@@ -74,9 +74,6 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
             curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
-            //   curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
-
-//            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
 
             if(curl_easy_perform(Handle)==CURLE_OK) {
                 try {
@@ -163,7 +160,6 @@ namespace Twitter{
             URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297";
             curl_easy_setopt(Handle, CURLOPT_URL, URL_REQUEST.c_str());
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
-            //   curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
             if(curl_easy_perform(Handle)==CURLE_OK){
                 try {
