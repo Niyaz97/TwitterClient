@@ -32,7 +32,6 @@ namespace Twitter{
         namespace bai = boost::archive::iterators;
 
         std::stringstream os;
-
         // convert binary values to base64 characters
         typedef bai::base64_from_binary
         // retrieve 6 bit integers from a sequence of 8 bit bytes
@@ -106,21 +105,23 @@ namespace Twitter{
         {
             std::lock_guard<std::mutex> lk(mutex);
             std::cout << "Thread " << thread_num + 1 << std::endl;
-           if(v== true) {
+           if(v == true) {
                std::time_t start = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                std::cout << "Start time: " << ctime(&start);
                std::cout << followers[i].screen_name << std::endl;
                std::time_t end = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                std::cout << "End time: " << ctime(&end);
-               std::cout<<std::endl;
            }
             else std::cout << followers[i].screen_name << std::endl<<std::endl;
-            std::cout<<std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
         }
     }
 
     auto Twitter::Client::print_followers_thread(size_t n, const std::vector<Twitter::Follower>& followers, bool v) -> bool {
+
+        std::cout <<  "Number of threads:" << std::endl;
+        std::cin >> n;
+
         count =0;
         if (n < 1 || n > std::thread::hardware_concurrency()) {
             std::cout << "error" << std::endl;
