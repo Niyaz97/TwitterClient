@@ -124,7 +124,7 @@ namespace Twitter{
 
         count =0;
         if (n < 1 || n > std::thread::hardware_concurrency()) {
-            std::cout << "error" << std::endl;
+            std::cerr << "error" << std::endl;
             return false;
         }
 
