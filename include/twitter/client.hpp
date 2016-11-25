@@ -32,15 +32,10 @@ namespace Twitter {
 
         auto encode64(const std::string )->std::string;
         auto check_connection(const std::string , const std::string ) -> bool;
-
-
         auto print_followers_thread(size_t, const std::vector<Twitter::Follower>&, bool) -> bool;
         auto print_followers(const size_t, const size_t, const std::vector<Twitter::Follower>&, bool) -> void ;
         auto print() -> void;
-
         auto get_followers() -> std::vector<Follower>;
-
-        auto check_connection_signature() -> bool;
 
         static auto write_to_string(void* data, size_t size, size_t nmemb, void* stream) -> size_t;
         bool flag;
