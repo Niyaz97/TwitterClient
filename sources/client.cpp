@@ -6,13 +6,16 @@
 #include <boost/archive/iterators/base64_from_binary.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/algorithm/string.hpp>
-
+#include <thread>
 
 namespace Twitter{
+    std::mutex mutex;
 
+    int count=0;
     Twitter::Client::Client() : bearer_token(""){
         Handle = curl_easy_init();
     }
+
     Twitter::Client::~Client(){
         curl_easy_cleanup(Handle);
     }
@@ -29,7 +32,6 @@ namespace Twitter{
         namespace bai = boost::archive::iterators;
 
         std::stringstream os;
-
         // convert binary values to base64 characters
         typedef bai::base64_from_binary
         // retrieve 6 bit integers from a sequence of 8 bit bytes
@@ -42,13 +44,10 @@ namespace Twitter{
         return os.str();
     }
 
-
-
     auto Twitter::Client::check_connection(const std::string consumer_key, const std::string consumer_secret)-> bool {
 
         std::string encoded_token=encode64(consumer_key+":"+consumer_secret);
         std::string separator="&";
-        CURLcode res;
         if(Handle){
 
             curl_easy_setopt(Handle, CURLOPT_URL, "https://api.twitter.com/oauth2/token");
@@ -74,23 +73,20 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
             curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
-            curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
-
-//            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
 
             if(curl_easy_perform(Handle)==CURLE_OK) {
-              try {
-                  curl_slist_free_all(slist);
-                  curl_easy_reset(Handle);
+                try {
+                    curl_slist_free_all(slist);
+                    curl_easy_reset(Handle);
 
-                  json jsn_obj = json::parse(content);
-                  json jsn_token = jsn_obj.begin().value();
-                  bearer_token = jsn_token.dump();
-                  bearer_token.erase(bearer_token.begin());
-                  bearer_token.erase(bearer_token.end()-1);
-                  std::cout << "bearer_token= " << bearer_token << std::endl;
-                  return true;
-              }
+                    json jsn_obj = json::parse(content);
+                    json jsn_token = jsn_obj.begin().value();
+                    bearer_token = jsn_token.dump();
+                    bearer_token.erase(bearer_token.begin());
+                    bearer_token.erase(bearer_token.end()-1);
+                    std::cout << "bearer_token= " << bearer_token << std::endl;
+                    return true;
+                }
 
                 catch(const std::exception &except){
                     std::cerr<<except.what()<<std::endl;
@@ -102,42 +98,53 @@ namespace Twitter{
         return false;
     }
 
-    auto Twitter::Client::print_followers(json &followers) -> void{
-        if( !followers.is_null()){
-            for(json::iterator it = followers.begin(); it!=followers.end(); ++it) {
+    auto Twitter::Client::print_followers(const size_t thread_num, const size_t n, const std::vector<Twitter::Follower>& followers, bool v) -> void {
 
-                json jsn_follow_c=it.value()["followers_count"];
-                if(!jsn_follow_c.is_null())
-                    std::cout<<"followers count: " << jsn_follow_c.begin().value() << std::endl;
 
-                json jsn_id = it.value()["id"];
-                if (!jsn_id.is_null())
-                    std::cout << "id: " << jsn_id.begin().value() << std::endl;
-
-//                    json jsn_id_str = it.value()["id_str"];
-//                    if (!jsn_id_str.is_null())
-//                        std::cout << "id_string: " << jsn_id_str.begin().value() << std::endl;
-
-                json jsn_name = it.value()["name"];
-                if (!jsn_name.is_null())
-                    std::cout << "name: " << jsn_name.begin().value()<<std::endl;
-
-                json jsn_screen_name = it.value()["screen_name"];
-                if (!jsn_screen_name.is_null())
-                    std::cout << "screen_name: " << jsn_screen_name.begin().value() << std::endl;
-
-//                    json jsn_location = it.value()["location"];
-//                    if (!jsn_location.is_null())
-//                        std::cout << "location:  " << jsn_location.begin().value() << std::endl;
-
-                std::cout << std::endl;
-            }
+        for(size_t i = thread_num; i < followers.size(); i += n)
+        {
+            std::lock_guard<std::mutex> lk(mutex);
+            std::cout << "Thread " << thread_num + 1 << std::endl;
+           if(v == true) {
+               std::time_t start = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+               std::cout << "Start time: " << ctime(&start);
+               std::cout << followers[i].screen_name << std::endl;
+               std::time_t end = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+               std::cout << "End time: " << ctime(&end);
+           }
+            else std::cout << followers[i].screen_name << std::endl<<std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(600));
         }
     }
 
-    auto Twitter::Client::get_followers()-> Client::json {
+    auto Twitter::Client::print_followers_thread(size_t n, const std::vector<Twitter::Follower>& followers, bool v) -> bool {
 
-            if(Handle){
+        std::cout <<  "Number of threads:" << std::endl;
+        std::cin >> n;
+
+        count =0;
+        if (n < 1 || n > std::thread::hardware_concurrency()) {
+            std::cout << "error" << std::endl;
+            return false;
+        }
+
+        std::vector<std::thread> follow_thread;
+
+        for (size_t i = 0; i < n; ++i) {
+            follow_thread.push_back(std::thread(&Twitter::Client::print_followers, this, i, n, std::ref(followers), v));
+        }
+
+        for (size_t i = 0; i < n; ++i) {
+            if (follow_thread[i].joinable())
+                follow_thread[i].join();
+        }
+
+        return true;
+    }
+
+    auto Twitter::Client::get_followers()-> std::vector<Follower> {
+        std::vector<Twitter::Follower> result;
+        if(Handle){
             std::string content, header;
             //  сохраняем html код cтраницы в строку content
             curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
@@ -151,20 +158,38 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_HTTPHEADER, slist);
 
             std::string URL_REQUEST;
-            URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297&count=1";
+            URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297";
             curl_easy_setopt(Handle, CURLOPT_URL, URL_REQUEST.c_str());
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
-            curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
             if(curl_easy_perform(Handle)==CURLE_OK){
                 try {
                     json jsn_obj = json::parse(content);
                     json jsn_users = jsn_obj["users"];
+                    for(json::iterator it = jsn_users.begin(); it!=jsn_users.end(); ++it) {
+                        Follower follow;
 
-                    print_followers(jsn_users);
+                        json jsn_follow_c=it.value()["followers_count"];
+                        if(!jsn_follow_c.is_null())
+                            follow.follower_count=jsn_follow_c.begin().value();
+
+                        json jsn_id = it.value()["id"];
+                        if (!jsn_id.is_null())
+                            follow.id=jsn_id.begin().value();
+
+                        json jsn_name = it.value()["name"];
+                        if (!jsn_name.is_null())
+                            follow.name=jsn_name.begin().value();
+
+                        json jsn_screen_name = it.value()["screen_name"];
+                        if (!jsn_screen_name.is_null())
+                            follow.screen_name=jsn_screen_name.begin().value();
+
+                        result.push_back(follow);
+                    }
                     curl_slist_free_all(slist);
                     curl_easy_reset(Handle);
-                    return jsn_users;
+                    return result;
                 }
                 catch(const std::exception &except){
                     std::cerr<<except.what()<<std::endl;
@@ -173,62 +198,6 @@ namespace Twitter{
             curl_slist_free_all(slist);
             curl_easy_reset(Handle);
         }
-    return nullptr;
-    }
-
-    auto Twitter::Client::check_connection_signature() -> bool {
-
-        time_t t;
-        time(&t);
-
-        std::string ts = boost::lexical_cast<std::string>(t);
-
-        if(Handle){
-            curl_easy_setopt(Handle, CURLOPT_URL, "https://api.twitter.com/1.1/statuses/update.json");
-            curl_easy_setopt(Handle, CURLOPT_POST, 1);
-            curl_slist* authlist=nullptr;
-            std::string ouath_consumer_key="ZnmxBs7YbI7oD2bn5DMirBURD&";
-            std::string oauth_nonce=encode64(ts)+"&";
-            std::string oauth_signature="&";
-            std::string oauth_signature_method="HMAC-SHA1&";
-            std::string oauth_timestamp=ts;
-            std::string oauth_token="AAAAAAAAAAAAAAAAAAAAAPCkxgAAAAAANQPSyH7K0q6Hocmj1%2FscKemMKiM%3DzhdMAhdr30t9MP9CkaSPD7Jz6WbJ3gdWgxpX7n6I0ZwFQVDPdS&";
-            std::string oauth_version="1.0";
-
-            authlist=curl_slist_append(authlist, ouath_consumer_key.c_str());
-            authlist=curl_slist_append(authlist, oauth_nonce.c_str());
-           // authlist=curl_slist_append(authlist, oauth_signature.c_str());
-            authlist=curl_slist_append(authlist, oauth_signature_method.c_str());
-            authlist=curl_slist_append(authlist, oauth_timestamp.c_str());
-            authlist=curl_slist_append(authlist, oauth_token.c_str());
-            authlist=curl_slist_append(authlist, oauth_version.c_str());
-            authlist=curl_slist_append(authlist, "Content-Type: application/x-www-form-urlencoded");
-
-            std::string data="grant_type=client_credentials";
-            // POST- запрос c авторизацией
-//            curl_easy_setopt(Handle, CURLOPT_POSTFIELDS, data.c_str() );
-//            curl_easy_setopt(Handle, CURLOPT_POSTFIELDSIZE, data.length() );
-//            curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
-
-            std::string content, header;
-            //  сохраняем html код cтраницы в строку content
-            curl_easy_setopt(Handle, CURLOPT_WRITEFUNCTION, write_to_string);
-            curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
-            curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
-            curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
-            curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
-
-//            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
-
-            if(curl_easy_perform(Handle)==CURLE_OK) {
-                curl_slist_free_all(authlist);
-                std::cout<<content<<std::endl;
-                std::cout<<header<<std::endl;
-                return true;
-            }
-            curl_easy_reset(Handle);
-        }
-        return false;
+        return result;
     }
 }
-
