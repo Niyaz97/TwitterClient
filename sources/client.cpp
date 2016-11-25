@@ -10,13 +10,10 @@
 
 namespace Twitter{
     std::mutex mutex;
-    int count=0;
 
+    int count=0;
     Twitter::Client::Client() : bearer_token(""){
         Handle = curl_easy_init();
-    }
-    Twitter::Client::Client(std::vector<Twitter::Follower> result_){
-        result=result_;
     }
 
     Twitter::Client::~Client(){
@@ -48,13 +45,10 @@ namespace Twitter{
         return os.str();
     }
 
-
-
     auto Twitter::Client::check_connection(const std::string consumer_key, const std::string consumer_secret)-> bool {
 
         std::string encoded_token=encode64(consumer_key+":"+consumer_secret);
         std::string separator="&";
-        CURLcode res;
         if(Handle){
 
             curl_easy_setopt(Handle, CURLOPT_URL, "https://api.twitter.com/oauth2/token");
@@ -80,7 +74,7 @@ namespace Twitter{
             curl_easy_setopt(Handle, CURLOPT_WRITEDATA,     &content);
             curl_easy_setopt(Handle, CURLOPT_HEADERFUNCTION, write_to_string);
             curl_easy_setopt(Handle, CURLOPT_WRITEHEADER, &header);
-         //   curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
+            //   curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
 //            curl_easy_setopt(Handle, CURLOPT_HEADER, 1); //заголовки ответа сервера будут отображаться вместе с html-кодом страницы
 
@@ -108,53 +102,50 @@ namespace Twitter{
         return false;
     }
 
-    auto Twitter::Client::print_followers(size_t thread_num) -> void {
+    auto Twitter::Client::print_followers(const size_t thread_num, const size_t n, const std::vector<Twitter::Follower>& followers, bool v) -> void {
 
-        do {
-            mutex.lock();
-            if(count<result.size()){
-                if(flag){
-                    std::cout << "Thread " << thread_num << std::endl;
-                    std::time_t start = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-                    std::cout << "Start time: " << ctime(&start);
-                    std::cout<<result[count].screen_name<<std::endl;
-                    std::time_t end = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-                    std::cout << "End time: " << ctime(&end);
-                }
-                else std::cout<<result[count].id<<std::endl;
-            }
-            std::cout << std::endl;
-            ++count;
-            mutex.unlock();
+
+        for(size_t i = thread_num; i < followers.size(); i += n)
+        {
+            std::lock_guard<std::mutex> lk(mutex);
+            std::cout << "Thread " << thread_num + 1 << std::endl;
+           if(v== true) {
+               std::time_t start = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+               std::cout << "Start time: " << ctime(&start);
+               std::cout << followers[i].screen_name << std::endl;
+               std::time_t end = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+               std::cout << "End time: " << ctime(&end);
+               std::cout<<std::endl;
+           }
+            else std::cout << followers[i].screen_name << std::endl<<std::endl;
+            std::cout<<std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(1));
-        } while (count < result.size());
+        }
     }
 
-    auto Twitter::Client::print_followers_thread(size_t n) -> bool {
+    auto Twitter::Client::print_followers_thread(size_t n, const std::vector<Twitter::Follower>& followers, bool v) -> bool {
+        count =0;
+        if (n < 1 || n > std::thread::hardware_concurrency()) {
+            std::cout << "error" << std::endl;
+            return false;
+        }
 
-            count=0;
-            if (n < 1 || n > std::thread::hardware_concurrency()) {
-                std::cout << "error" << std::endl;
-                return false;
-            }
+        std::vector<std::thread> follow_thread;
 
-            std::vector<std::thread> follow_thread;
+        for (size_t i = 0; i < n; ++i) {
+            follow_thread.push_back(std::thread(&Twitter::Client::print_followers, this, i, n, std::ref(followers), v));
+        }
 
-            for (auto i = 0; i < n; i++) {
-                follow_thread.push_back(std::thread(&Twitter::Client::print_followers, this, i));
-            }
+        for (size_t i = 0; i < n; ++i) {
+            if (follow_thread[i].joinable())
+                follow_thread[i].join();
+        }
 
-            for (auto i = 0; i < n; i++) {
-                if (follow_thread[i].joinable())
-                    follow_thread[i].join();
-                return true;
-            }
-
-        return false;
+        return true;
     }
 
     auto Twitter::Client::get_followers()-> std::vector<Follower> {
-
+        std::vector<Twitter::Follower> result;
         if(Handle){
             std::string content, header;
             //  сохраняем html код cтраницы в строку content
@@ -172,7 +163,7 @@ namespace Twitter{
             URL_REQUEST="https://api.twitter.com/1.1/followers/list.json?cursor=-1&screen_name=niyaz160297";
             curl_easy_setopt(Handle, CURLOPT_URL, URL_REQUEST.c_str());
             curl_easy_setopt(Handle, CURLOPT_SSL_VERIFYPEER, 1);
-         //   curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
+            //   curl_easy_setopt(Handle, CURLOPT_VERBOSE, 1L);
 
             if(curl_easy_perform(Handle)==CURLE_OK){
                 try {
@@ -212,6 +203,4 @@ namespace Twitter{
         }
         return result;
     }
-
-
 }
