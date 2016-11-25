@@ -29,7 +29,7 @@ int main() {
                 std::cout << "Printed successfully" << std::endl;
         }
 
-        else throw std::invalid_argument("Wrong command");
+        if(!std::cin) throw std::invalid_argument("Wrong command");
         
     } catch(const std::invalid_argument& e) {
         std::cerr<<e.what()<<std::endl;
