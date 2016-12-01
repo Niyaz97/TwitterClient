@@ -19,9 +19,8 @@ add_library(${PROJECT_NAME} STATIC ${CMAKE_CURRENT_SOURCE_DIR}/sources/client.cp
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Boost REQUIRED)
-find_package(Boost COMPONENTS system REQUIRED)
 
-include_directories(${CURL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS)
+include_directories(${CURL_INCLUDE_DIR})
 
 if(UNIX)
     set(DEPENDS_LIBRARIES ${OPENSSL_LIBRARIES} ${CURL_LIBRARY})
