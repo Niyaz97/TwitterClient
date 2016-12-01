@@ -18,8 +18,10 @@ add_library(${PROJECT_NAME} STATIC ${CMAKE_CURRENT_SOURCE_DIR}/sources/client.cp
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Boost COMPONENTS system REQUIRED)
 
-include_directories(${CURL_INCLUDE_DIR})
+
+include_directories(${CURL_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 if(THREADS_HAVE_PTHREAD_ARG)
 	set_property(TARGET ${PROJECT_NAME} PROPERTY COMPILE_OPTIONS "-pthread")
 	set_property(TARGET ${PROJECT_NAME} PROPERTY INTERFACE_COMPILE_OPTIONS "-pthread")
