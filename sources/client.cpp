@@ -118,10 +118,6 @@ namespace Twitter{
     }
 
     auto Twitter::Client::print_followers_thread(size_t n, const std::vector<Twitter::Follower>& followers, bool v) -> bool {
-
-        std::cout <<  "Number of threads:" << std::endl;
-        std::cin >> n;
-
         count =0;
         if (n < 1 || n > std::thread::hardware_concurrency()) {
             std::cerr << "error" << std::endl;
