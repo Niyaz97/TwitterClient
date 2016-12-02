@@ -1,7 +1,7 @@
 #include <iostream>
 #include <twitter/client.hpp>
 
-int main() {
+int main(int argc, char** argv) {
     Twitter::Client check;
     if(check.check_connection(cons_key,cons_secret))
         std::cout<<"Connected successfully"<<std::endl;
@@ -11,27 +11,8 @@ int main() {
     std::vector<Twitter::Follower> follows = followers.get_followers();
 
     Twitter::Client print_follows;
-    size_t number;
-    bool _v;
-    try {
-        std::string s;
-        std::cout << "Enter a command" << std::endl;
-        std::cin >> s;
-        if(!std::cin) throw std::invalid_argument("Wrong command");
-
-        if (s == "get_followers_v") {
-            _v = true;
-            if (print_follows.print_followers_thread(number, follows, _v))
-                std::cout << "Printed successfully" << std::endl;
-        }
-
-        if (s == "get_followers") {
-            _v = false;
-            if (print_follows.print_followers_thread(number, follows, _v))
-                std::cout << "Printed successfully" << std::endl;
-        }        
-    } catch(const std::invalid_argument& e) {
-        std::cerr<<e.what()<<std::endl;
-    }
+    size_t number=3;
+        
+    print_follows.print_followers_thread(number, follows, argc == 2 && strcmp(argv[1], "-v") == 0);
     return 0;
 }
