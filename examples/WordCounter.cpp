@@ -1,6 +1,5 @@
 #include <iostream>
 #include <regex>
-#include <twitter/boost/filesystem/operations.hpp>
 #include <twitter/boost/process.hpp>
 
 namespace bp =::boost::process;
