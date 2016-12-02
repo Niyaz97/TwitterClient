@@ -29,4 +29,4 @@ script:
   - cd build
   - cmake .. && make
   - ./Examples
-  - ./WordCounter /examples/Examples
+  - ./WordCounter Examples
