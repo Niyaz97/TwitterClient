@@ -39,8 +39,10 @@ elseif(MSVC)
 endif()
 
 add_executable(Examples ${CMAKE_CURRENT_SOURCE_DIR}/examples/main.cpp)
+add_executable(WordCounter ${CMAKE_CURRENT_SOURCE_DIR}/examples/WordCounter.cpp)
 
-target_link_libraries(Examples ${PROJECT_NAME} ${DEPENDS_LIBRARIES})
+target_link_libraries(Examples ${PROJECT_NAME} ${DEPENDS_LIBRARIES} pthread)
+target_link_libraries(WordCounter ${PROJECT_NAME} ${DEPENDS_LIBRARIES} boost_system)
 
 if(BUILD_TESTS)
     enable_testing()
