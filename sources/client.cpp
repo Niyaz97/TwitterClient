@@ -84,7 +84,6 @@ namespace Twitter{
                     bearer_token = jsn_token.dump();
                     bearer_token.erase(bearer_token.begin());
                     bearer_token.erase(bearer_token.end()-1);
-                    std::cout << "bearer_token= " << bearer_token << std::endl;
                     return true;
                 }
 
@@ -112,7 +111,7 @@ namespace Twitter{
                std::time_t end = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
                std::cout << "End time: " << ctime(&end);
            }
-            else std::cout << followers[i].screen_name << std::endl<<std::endl;
+            else std::cout << followers[i].screen_name << " " << followers[i].id << std::endl<<std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(600));
         }
     }
