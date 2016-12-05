@@ -21,14 +21,14 @@ int main(int argc, char** argv) {
     bp::pistream& is = child.get_stdout();
 
     std::string text;
-    std::regex e("(\\w+\\W*\\w+)");
+    std::regex e("\\w+\\W*");
     std::smatch sm;
 
 
     size_t counter = 0;
     while (std::getline(is, text)) {
-        while (std::regex_match(text, sm, e)) {
-            counter += sm.size();
+        while (std::regex_search(text, sm, e)) {
+            counter++;
             text = sm.suffix();
         }
     }
