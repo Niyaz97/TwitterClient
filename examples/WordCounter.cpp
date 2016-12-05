@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     bp::pistream& is = child.get_stdout();
 
     std::string text;
-    std::regex e("\\w+");
+    std::regex e("(\\w+\\W*\\w+)");
     std::smatch sm;
 
 
